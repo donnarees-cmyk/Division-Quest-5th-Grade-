@@ -1,0 +1,484 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Division Quest</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout: a game map. A sticky coin bar, training rooms stacked down the page, then three boss worlds in tabs. One bright, fixed game look. */
+:root{
+  color-scheme:light;
+  --bg:#2c1f78;       /* royal night sky */
+  --bg2:#3a2a96;
+  --card:#fffaf0;
+  --ink:#22184d;
+  --muted:#5c5384;
+  --yellow:#ffd23f; --pink:#ff4f8b; --orange:#ff9f1c; --teal:#12b5a5; --blue:#2d7ff9; --green:#36b24a; --red:#e2403a;
+  --display:"Lilita One","Arial Rounded MT Bold","Trebuchet MS",sans-serif;
+  --body:"Atkinson Hyperlegible",system-ui,sans-serif;
+  --cw:1.7em;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);background-image:radial-gradient(circle at 12% 18%,rgba(255,255,255,.18) 0 2px,transparent 3px),radial-gradient(circle at 78% 8%,rgba(255,255,255,.14) 0 2px,transparent 3px),radial-gradient(circle at 55% 40%,rgba(255,255,255,.1) 0 1.5px,transparent 2.5px);background-size:260px 260px,340px 340px,200px 200px;color:var(--ink);font:1.08rem/1.55 var(--body)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--ink)}
+.hud{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--ink);color:#fff;border-bottom:4px solid var(--yellow)}
+.hud .in{max-width:960px;margin:0 auto;padding-block:8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.hud .logo{font-family:var(--display);font-size:1.3rem;color:var(--yellow);margin-right:auto;letter-spacing:.02em}
+.stat{display:flex;align-items:center;gap:6px;font-weight:700;background:rgba(255,255,255,.12);border-radius:999px;padding:4px 12px;font-variant-numeric:tabular-nums}
+.coin{width:20px;height:20px;border-radius:50%;background:var(--yellow);box-shadow:inset 0 -3px 0 #d9a400;display:inline-block}
+.star{color:var(--yellow)}
+.wrap{max-width:960px;margin:0 auto;padding-block:24px 120px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:26px}
+h1,h2,h3{font-family:var(--display);font-weight:400;line-height:1.1;margin:0;text-wrap:balance;letter-spacing:.01em}
+h1{font-size:clamp(2.6rem,8vw,4.4rem);color:#fff;text-shadow:0 5px 0 var(--pink),0 9px 0 var(--ink)}
+h2{font-size:clamp(1.6rem,4.5vw,2.2rem)}
+h3{font-size:1.3rem}
+p{margin:0;max-width:66ch}
+.hero{display:flex;flex-direction:column;gap:14px;color:#fff}
+.hero p{color:#e9e4ff;font-size:1.15rem}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font-size:.8rem;border-radius:999px;padding:3px 10px;background:rgba(255,255,255,.14);color:#fff}
+.card{background:var(--card);border:4px solid var(--ink);border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:14px;box-shadow:0 8px 0 var(--ink)}
+.card.y{box-shadow:0 8px 0 var(--ink),0 0 0 6px var(--yellow) inset}
+.tag{display:inline-block;font-family:var(--display);font-size:.95rem;color:#fff;border-radius:999px;padding:2px 12px;align-self:flex-start}
+.sec-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.ican-tag{color:var(--teal);font-weight:700}
+button{font:inherit;cursor:pointer;color:inherit}
+.btn{border:3px solid var(--ink);background:#fff;color:var(--ink);border-radius:14px;padding:7px 14px;font-weight:700;box-shadow:0 4px 0 var(--ink);transition:transform .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.btn.go{background:var(--green);color:#fff}
+.btn.sm{padding:4px 12px;font-size:.9rem;box-shadow:0 3px 0 var(--ink)}
+.btn.listen{background:var(--teal);color:#fff}
+.btn.tip{background:var(--yellow)}
+.hud .btn{box-shadow:none;border-color:#fff;background:transparent;color:#fff;padding:4px 12px;font-size:.95rem}
+.hud .btn[aria-pressed=true]{background:var(--yellow);color:var(--ink);border-color:var(--yellow)}
+.btn:disabled{opacity:.5;cursor:default}
+:focus-visible{outline:4px solid var(--orange);outline-offset:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.coach-say{background:var(--ink);color:#fff;border-radius:14px;padding:12px 16px;font-size:1.1rem;min-height:3.4em}
+.coach-say b{color:var(--yellow)}
+.ican ul{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+.ican li{display:flex;gap:10px;align-items:flex-start}
+.ican input{width:24px;height:24px;flex:none;margin-top:2px;accent-color:var(--green)}
+/* drag & drop */
+.tile{border:3px solid var(--ink);background:var(--yellow);color:var(--ink);border-radius:12px;padding:8px 14px;font-weight:700;font-size:1.1rem;box-shadow:0 4px 0 var(--ink);touch-action:none;user-select:none;-webkit-user-select:none;font-variant-numeric:tabular-nums;min-width:3em;text-align:center}
+.tile.sel{background:var(--orange);color:#fff;transform:translateY(-3px)}
+.tile.txt{background:#fff;font-weight:400;font-size:1rem;text-align:left;max-width:100%}
+.ghost{position:fixed;z-index:90;pointer-events:none;transform:translate(-50%,-60%) rotate(-3deg);opacity:.95}
+.bank{display:flex;flex-wrap:wrap;gap:10px;padding:12px;border:3px dashed var(--muted);border-radius:14px;min-height:64px;background:#fff}
+.slot{border:3px dashed var(--blue);background:#eaf2ff;border-radius:12px;min-width:3.2em;min-height:2.4em;display:inline-flex;align-items:center;justify-content:center;font-weight:700;padding:2px 8px;color:var(--blue);vertical-align:middle}
+.slot.ok{border-style:solid;border-color:var(--green);background:#e2f7e5;color:var(--ink)}
+.slot.no{border-style:solid;border-color:var(--red);background:#fde6e5;color:var(--ink)}
+.slot.hot{background:#fff3c4;border-color:var(--orange)}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.frac{display:inline-flex;flex-direction:column;align-items:center;line-height:1;vertical-align:middle;font-variant-numeric:tabular-nums}
+.frac span:first-child{border-bottom:2px solid currentColor;padding:0 3px 2px}
+.frac span:last-child{padding-top:2px}
+/* vocab */
+.eq{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;justify-content:center;font-size:2rem;font-weight:700;font-variant-numeric:tabular-nums}
+.eq .col{display:flex;flex-direction:column;align-items:center;gap:8px}
+.eq .col .slot{font-size:.95rem;min-width:7em}
+/* coach */
+.coach{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:16px}
+@media (max-width:720px){.coach{grid-template-columns:1fr}}
+.ldbox{background:#fff;border:3px solid var(--ink);border-radius:16px;padding:16px;overflow-x:auto}
+.ld{display:grid;font-size:1.7rem;font-weight:700;row-gap:4px;width:max-content;margin:0 auto;font-variant-numeric:tabular-nums}
+.ld .it{display:flex;justify-content:flex-end}
+.ld .ch{width:var(--cw);text-align:center}
+.ld .dd{border-top:4px solid var(--ink)}
+.ld .dd.first{border-left:4px solid var(--ink);border-top-left-radius:14px}
+.ld .divisor{padding-right:6px;color:var(--pink);justify-content:flex-end;display:flex}
+.ld .quo{color:var(--blue)}
+.ld .remd{color:var(--blue);white-space:nowrap;display:flex;align-items:center;gap:6px;padding-left:8px}
+#coachBank:empty{display:none}
+.ld .ul{border-bottom:3px solid var(--ink)}
+.ld .minus{color:var(--muted);justify-content:flex-end;display:flex;padding-right:2px}
+.ld .slot{min-width:0;min-height:1.4em;font-size:1rem;padding:0 4px;border-radius:8px}
+.dmsb{display:flex;gap:6px;flex-wrap:wrap}
+.dmsb span{border:3px solid var(--ink);border-radius:999px;padding:2px 12px;font-weight:700;background:#fff}
+.dmsb span.now{background:var(--pink);color:#fff}
+.mults{display:flex;flex-wrap:wrap;gap:6px;font-size:.92rem;font-variant-numeric:tabular-nums}
+.mults span{background:#eee8ff;border-radius:8px;padding:2px 8px}
+.pick{display:flex;gap:8px;flex-wrap:wrap}
+.pick button{border:3px solid var(--ink);border-radius:12px;background:#fff;padding:4px 12px;font-weight:700}
+.pick button[aria-pressed=true]{background:var(--blue);color:#fff}
+.pick button.done::after{content:" ✓"}
+/* remainder sort */
+.buckets{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.bucket{border:3px dashed var(--ink);border-radius:16px;padding:10px;min-height:140px;display:flex;flex-direction:column;gap:8px;background:#fff}
+.bucket h3{font-size:1.1rem}
+.bucket .tile{font-size:.9rem;box-shadow:none;background:#e2f7e5;border-color:var(--green)}
+.bucket.hot{background:#fff3c4}
+.b1{border-color:var(--pink)}.b2{border-color:var(--blue)}.b3{border-color:var(--orange)}.b4{border-color:var(--teal)}
+/* fraction match */
+.fm{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.fm .pair{display:flex;align-items:center;justify-content:center;gap:10px;font-size:1.5rem;font-weight:700;background:#fff;border:3px solid var(--ink);border-radius:14px;padding:10px}
+/* worlds */
+.tabs{display:flex;gap:10px;flex-wrap:wrap}
+.tabs button{border:4px solid var(--ink);border-radius:16px;padding:8px 16px;font-family:var(--display);font-size:1.15rem;background:#fff;color:var(--ink);display:flex;flex-direction:column;align-items:flex-start;line-height:1.15;box-shadow:0 4px 0 var(--ink)}
+.tabs button small{font-family:var(--body);font-size:.8rem;color:var(--muted)}
+.tabs button[aria-selected=true]{background:var(--pink);color:#fff}
+.tabs button[aria-selected=true] small{color:#ffe3ee}
+.tabs button:disabled{opacity:.6;cursor:not-allowed}
+.q{border-top:3px dashed #d9d2f0;padding-top:16px;display:flex;flex-direction:column;gap:10px}
+.q:first-child{border-top:0;padding-top:0}
+.opts{display:grid;gap:8px}
+.opt{text-align:left;border:3px solid var(--ink);background:#fff;border-radius:12px;padding:9px 12px;font-weight:700}
+.opt.right{background:#e2f7e5;border-color:var(--green)}
+.opt.wrong{background:#fde6e5;border-color:var(--red)}
+.why{font-size:.98rem;color:var(--muted)}
+.tipbox{background:#fff6cf;border-radius:10px;padding:8px 12px;font-size:.98rem}
+.order{display:grid;gap:8px}
+.order .line{display:flex;gap:10px;align-items:center}
+.order .n{font-family:var(--display);font-size:1.3rem;width:1.4em;text-align:center}
+.order .slot{flex:1;justify-content:flex-start;min-height:2.8em}
+.order .slot .tile{box-shadow:none}
+.worldscore{display:flex;gap:16px;align-items:center;border:4px solid var(--ink);border-radius:16px;padding:14px;background:var(--yellow)}
+.bigstars{font-size:2rem;letter-spacing:4px}
+.plus{position:fixed;z-index:95;font-family:var(--display);color:var(--yellow);font-size:1.6rem;text-shadow:0 2px 0 var(--ink);pointer-events:none;animation:up 1s forwards}
+@keyframes up{to{transform:translateY(-60px);opacity:0}}
+/* calculator */
+#calc{position:fixed;z-index:80;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:270px;max-width:calc(100vw - 32px);background:var(--ink);border-radius:20px;padding:12px;border:4px solid var(--yellow);box-shadow:0 10px 30px rgba(0,0,0,.4)}
+#calc .disp{background:#d9f5c9;color:var(--ink);border-radius:10px;padding:8px 10px;text-align:right;font-variant-numeric:tabular-nums;min-height:3.6em;display:flex;flex-direction:column;justify-content:flex-end;overflow-wrap:anywhere}
+#calc .disp small{color:var(--muted)}
+#calc .disp b{font-size:1.5rem}
+#calc .keys{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+#calc .keys button{border:0;border-radius:10px;padding:10px 0;font-weight:700;font-size:1.1rem;background:#fff;color:var(--ink);box-shadow:0 3px 0 #9b93c9}
+#calc .keys button.op{background:var(--blue);color:#fff;box-shadow:0 3px 0 #1a4fa3}
+#calc .keys button.eqk{background:var(--green);color:#fff;box-shadow:0 3px 0 #1d7a2d}
+#calc .keys button.rk{background:var(--pink);color:#fff;box-shadow:0 3px 0 #a3254f;grid-column:span 2}
+#calc .top{display:flex;justify-content:space-between;align-items:center;color:#fff;margin-bottom:8px;font-family:var(--display)}
+#calc .top button{background:transparent;border:2px solid #fff;color:#fff;border-radius:8px;padding:0 8px}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:85}
+footer{color:#cfc8f5;font-size:.85rem;text-align:center}
+@media (prefers-reduced-motion:reduce){.shake,.plus{animation:none}.btn{transition:none}}
+</style>
+
+<div class="hud"><div class="in">
+  <span class="logo">Division Quest</span>
+  <span class="stat" title="Coins"><span class="coin" aria-hidden="true"></span><span id="coins">0</span></span>
+  <span class="stat" title="Stars"><span class="star" aria-hidden="true">★</span><span id="stars">0</span></span>
+  <button class="btn" id="voiceBtn" aria-pressed="true">Voice On</button>
+  <span class="stat" style="font-size:.8rem;font-weight:400" title="Read-aloud voice"><span id="vStat">Checking voice...</span></span>
+  <button class="btn" id="calcBtn" aria-pressed="false">Calculator</button>
+</div></div>
+<canvas id="confetti"></canvas>
+
+<div class="wrap">
+<header class="hero" data-read>
+  <span class="chip" style="align-self:flex-start;background:var(--pink)">5th Grade Math · FAST Prep</span>
+  <h1>Division Quest</h1>
+  <p>Welcome, hero! Train in the four practice rooms to master long division with two-digit divisors, step by step. Then battle through three worlds of FAST-style questions. Earn coins for every first-try answer and stars for every world you clear.</p>
+  <div class="row"><button class="btn listen" data-listen>Listen</button></div>
+  <div class="chips" aria-label="Florida B.E.S.T. standard">
+    <span class="chip">MA.5.NSO.2.2 Divide multi-digit whole numbers, up to five digits by two digits, using a standard algorithm</span>
+  </div>
+</header>
+
+<section class="card ican" data-read>
+  <h2>I Can Statements</h2>
+  <ul id="icanList"></ul>
+</section>
+
+<!-- Room 1 -->
+<section class="card" id="room1">
+  <span class="tag" style="background:var(--pink)">Training Room 1</span>
+  <div class="sec-head" data-read><h2>Division Words</h2><button class="btn listen" data-listen>Listen</button></div>
+  <p class="ican-tag" data-read>I can name the dividend, divisor, quotient, and remainder.</p>
+  <p data-read>Every division problem has parts with special names. The <b>dividend</b> is the number being divided. The <b>divisor</b> is the number you divide by. The <b>quotient</b> is the answer. The <b>remainder</b> is what is left over. Drag each word under the right number.</p>
+  <div class="eq" id="vocabEq"></div>
+  <div class="bank" id="vocabBank"></div>
+</section>
+
+<!-- Room 2 -->
+<section class="card" id="room2">
+  <span class="tag" style="background:var(--blue)">Training Room 2</span>
+  <div class="sec-head" data-read><h2>Long Division Coach</h2><button class="btn listen" data-listen>Listen</button></div>
+  <p class="ican-tag" data-read>I can divide up to a five-digit number by a two-digit number using the standard algorithm.</p>
+  <p data-read>Long division repeats four moves: <b>Divide, Multiply, Subtract, Bring down</b>. A trick to remember them is "Does McDonald's Sell Burgers?" The coach will tell you each move. Drag the right number into the glowing box. Use the multiples list to help you divide.</p>
+  <div class="pick" id="probPick" aria-label="Choose a problem"></div>
+  <div class="coach">
+    <div class="ldbox"><div class="ld" id="ld"></div></div>
+    <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+      <div class="dmsb" id="dmsb"><span data-s="q">Divide</span><span data-s="p">Multiply</span><span data-s="r">Subtract</span><span data-s="b">Bring down</span></div>
+      <div class="coach-say" id="coachSay" aria-live="polite"></div>
+      <div class="bank" id="coachBank"></div>
+      <div class="row"><button class="btn listen sm" id="coachRepeat">Repeat step</button><button class="btn sm" id="coachReset">Start over</button></div>
+      <div><b>Multiples of <span id="multD"></span></b><div class="mults" id="mults"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Room 3 -->
+<section class="card" id="room3">
+  <span class="tag" style="background:var(--orange)">Training Room 3</span>
+  <div class="sec-head" data-read><h2>Remainders as Fractions</h2><button class="btn listen" data-listen>Listen</button></div>
+  <p class="ican-tag" data-read>I can write a remainder as a fraction of the divisor.</p>
+  <p data-read>A remainder is part of one more group. You can write it as a fraction. The <b>remainder</b> becomes the numerator on top. The <b>divisor</b> becomes the denominator on the bottom. So 100 ÷ 7 = 14 R 2 can be written as 14 2/7. Drag the matching answer to each problem.</p>
+  <div class="fm" id="rf"></div>
+  <div class="bank" id="rfBank"></div>
+</section>
+
+<!-- Room 4 -->
+<section class="card" id="room4">
+  <span class="tag" style="background:var(--teal)">Training Room 4</span>
+  <div class="sec-head" data-read><h2>Estimate and Check</h2><button class="btn listen" data-listen>Listen</button></div>
+  <p class="ican-tag" data-read>I can estimate a quotient and check my answer with multiplication.</p>
+  <p data-read>Before you divide, <b>estimate</b>. Round the divisor to the nearest ten. Then change the dividend to a nearby number that divides easily. For 6,318 ÷ 79, think 6,400 ÷ 80 = 80. After you divide, <b>check</b>: quotient × divisor + remainder should equal the dividend. Drag the best estimate to each problem.</p>
+  <div class="fm" id="est"></div>
+  <div class="bank" id="estBank"></div>
+</section>
+
+<!-- Worlds -->
+<section class="card y" id="worlds">
+  <span class="tag" style="background:var(--green)">Boss Battles</span>
+  <div class="sec-head" data-read><h2>FAST Challenge Worlds</h2><button class="btn listen" data-listen>Listen</button></div>
+  <p class="ican-tag" data-read>I can solve FAST-style division problems at every level.</p>
+  <p data-read>Each world gets harder. World 1 checks the facts. World 2 asks you to estimate, check, and write remainders as fractions. World 3 asks you to think deeply and explain. You get one try on each question, just like the real test. Press Strategy Tip if you need help getting started. Clear a world to unlock the next one.</p>
+  <div class="tabs" role="tablist" id="worldTabs"></div>
+  <div id="worldPanels"></div>
+  <div id="trophy" aria-live="polite"></div>
+</section>
+
+<footer>Division Quest · Created by Donna Rees</footer>
+</div>
+
+<div id="calc" hidden role="dialog" aria-label="Calculator">
+  <div class="top"><span>Calculator</span><button id="calcClose" aria-label="Close calculator">✕</button></div>
+  <div class="disp"><small id="cExpr">&nbsp;</small><b id="cOut">0</b></div>
+  <div class="keys" id="keys"></div>
+</div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const store={get(k,d){try{const v=localStorage.getItem('dq2_'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('dq2_'+k,JSON.stringify(v))}catch(e){}}};
+const S=Object.assign({coins:0,ans:{},tries:{},ican:{},coach:{},voice:true},store.get('state',{}));
+function save(){store.set('state',S)}
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const fmt=n=>Number(n).toLocaleString('en-US');
+function fracHTML(v){v=String(v);return v.replace(/(\d+)\/(\d+)/g,'<span class="frac"><span>$1</span><span>$2</span></span>')}
+
+/* ============ Google US English voice only ============ */
+let voice=null,warned=false,speakId=0;
+function pickVoice(){if(!('speechSynthesis' in window))return null;const vs=speechSynthesis.getVoices();voice=vs.find(v=>v.name==='Google US English')||vs.find(v=>/^google/i.test(v.name)&&/^en[-_]US$/i.test(v.lang))||null;vStatus();return voice}
+function vStatus(){const el=document.getElementById('vStat');if(el)el.textContent=voice?'Google US English':'Google voice not on this device'}
+function getVoice(){return new Promise(res=>{if(pickVoice())return res(voice);let n=0;const t=setInterval(()=>{if(pickVoice()||++n>20){clearInterval(t);res(voice)}},100)})}
+if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice;setTimeout(()=>{pickVoice();vStatus()},1500)}else setTimeout(vStatus,0)
+function toast(msg){let t=$('#vtoast');if(!t){t=document.createElement('div');t.id='vtoast';t.setAttribute('role','status');t.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:#22184d;color:#fff;padding:10px 16px;border-radius:12px;z-index:99;max-width:90vw;border:3px solid #ffd23f';document.body.appendChild(t)}t.textContent=msg;t.hidden=false;clearTimeout(t._h);t._h=setTimeout(()=>t.hidden=true,4000)}
+const DEN={2:['half','halves'],3:['third','thirds'],4:['fourth','fourths'],5:['fifth','fifths'],6:['sixth','sixths'],7:['seventh','sevenths'],8:['eighth','eighths'],9:['ninth','ninths'],10:['tenth','tenths'],12:['twelfth','twelfths']};
+function clean(t){return t.replace(/MA\.\d+\.[A-Z]+\.\d+\.\d+/g,'')
+ .replace(/\b(Listen|Voice On|Voice Off|Repeat step|Start over|Strategy Tip)\b/g,'')
+ .replace(/(\d+)\/(\d+)/g,(m,a,b)=>DEN[b]?`${a} ${+a===1?DEN[b][0]:DEN[b][1]}`:`${a} over ${b}`)
+ .replace(/(\d)\s*R\s*(\d)/g,'$1 remainder $2').replace(/÷/g,' divided by ').replace(/×/g,' times ').replace(/−/g,' minus ').replace(/=/g,' equals ').replace(/_{2,}/g,' blank ')
+ .replace(/\s+/g,' ').trim()}
+async function speak(t,force){const id=++speakId;if(!('speechSynthesis' in window)||(!S.voice&&!force))return;speechSynthesis.cancel();const v=await getVoice();if(id!==speakId)return;
+ if(!v){if(!warned){toast('The Google US English voice is not available on this device.');warned=true}return}
+ try{speechSynthesis.resume()}catch(e){}
+ (clean(t).match(/[^.!?]+[.!?]*/g)||[]).map(s=>s.trim()).filter(Boolean).forEach(s=>{const u=new SpeechSynthesisUtterance(s);u.voice=v;u.voiceURI=v.voiceURI;u.lang='en-US';u.rate=.93;speechSynthesis.speak(u)})}
+function textOf(el){const c=el.cloneNode(true);c.querySelectorAll('.chips,button,.bank,.eq').forEach(n=>n.remove());return c.innerText}
+$$('[data-listen]').forEach(b=>b.addEventListener('click',()=>{const sec=b.closest('section,header');const parts=sec.matches('[data-read]')?[sec]:[...sec.querySelectorAll('[data-read]')];speak(parts.map(textOf).join('. '),true)}));
+const vb=$('#voiceBtn');function vbSet(){vb.setAttribute('aria-pressed',S.voice);vb.textContent=S.voice?'Voice On':'Voice Off'}vbSet();
+vb.onclick=()=>{S.voice=!S.voice;save();vbSet();if(!S.voice){speakId++;try{speechSynthesis.cancel()}catch(e){}}};
+
+/* ============ sounds, coins, confetti ============ */
+let actx=null;
+function tone(ok){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const notes=ok?[660,990]:[240,180];notes.forEach((f,i)=>{const o=actx.createOscillator(),g=actx.createGain();o.type=ok?'triangle':'square';o.frequency.value=f;g.gain.setValueAtTime(.0001,actx.currentTime+i*.11);g.gain.exponentialRampToValueAtTime(.12,actx.currentTime+i*.11+.02);g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+i*.11+.18);o.connect(g).connect(actx.destination);o.start(actx.currentTime+i*.11);o.stop(actx.currentTime+i*.11+.2)})}catch(e){}}
+function hud(){$('#coins').textContent=S.coins;$('#stars').textContent=WORLDS.reduce((a,w)=>a+starsFor(w),0)}
+function award(n,el){S.coins+=n;save();hud();const r=(el||$('#coins')).getBoundingClientRect();const p=document.createElement('div');p.className='plus';p.textContent='+'+n;p.style.left=(r.left+r.width/2)+'px';p.style.top=(r.top)+'px';document.body.appendChild(p);setTimeout(()=>p.remove(),1000)}
+function burst(){if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;const cv=$('#confetti'),x=cv.getContext('2d');cv.width=innerWidth;cv.height=innerHeight;const cs=['#ffd23f','#ff4f8b','#ff9f1c','#12b5a5','#2d7ff9','#36b24a'];const D=Array.from({length:170},()=>({x:Math.random()*cv.width,y:-20-Math.random()*cv.height*.4,v:2+Math.random()*3.5,r:Math.random()*6,c:cs[Math.random()*6|0],s:6+Math.random()*6}));let t=0;(function f(){x.clearRect(0,0,cv.width,cv.height);D.forEach(p=>{p.y+=p.v;p.x+=Math.sin((t+p.r)/10)*1.4;x.save();x.translate(p.x,p.y);x.rotate(t/15+p.r);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);x.restore()});if(++t<230)requestAnimationFrame(f);else x.clearRect(0,0,cv.width,cv.height)})()}
+function shake(el){el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake')}
+
+/* ============ drag & drop (pointer + tap) ============ */
+let selTile=null;
+function makeTile(val,group,html,cls){const t=document.createElement('button');t.className='tile'+(cls?' '+cls:'');t.dataset.val=val;t.dataset.group=group;t.innerHTML=html!=null?html:fracHTML(val);return t}
+function makeSlot(group,onDrop){const s=document.createElement('button');s.className='slot';s.dataset.group=group;s._drop=onDrop;s.innerHTML='&nbsp;?&nbsp;';s.setAttribute('aria-label','drop zone');return s}
+document.addEventListener('pointerdown',e=>{const t=e.target.closest('.tile');if(!t||t.dataset.locked)return;e.preventDefault();
+ const st={x:e.clientX,y:e.clientY};let gh=null,over=null;
+ const mv=ev=>{if(!gh&&Math.hypot(ev.clientX-st.x,ev.clientY-st.y)>8){gh=t.cloneNode(true);gh.classList.add('ghost');gh.style.width=t.offsetWidth+'px';document.body.appendChild(gh);t.style.opacity=.35}
+  if(gh){gh.style.left=ev.clientX+'px';gh.style.top=ev.clientY+'px';const el=document.elementFromPoint(ev.clientX,ev.clientY);const z=el&&el.closest('.slot,.bucket');if(over&&over!==z)over.classList.remove('hot');if(z&&z.dataset.group===t.dataset.group){z.classList.add('hot');over=z}else over=null}};
+ const up=ev=>{document.removeEventListener('pointermove',mv);document.removeEventListener('pointerup',up);document.removeEventListener('pointercancel',up);t.style.opacity='';
+  if(over)over.classList.remove('hot');
+  if(gh){gh.remove();const el=document.elementFromPoint(ev.clientX,ev.clientY);const z=el&&el.closest('.slot,.bucket');if(z&&z.dataset.group===t.dataset.group&&z._drop)z._drop(t)}
+  else{ $$('.tile.sel').forEach(x=>x!==t&&x.classList.remove('sel'));t.classList.toggle('sel');selTile=t.classList.contains('sel')?t:null;if(selTile)speak(selTile.innerText)}};
+ document.addEventListener('pointermove',mv);document.addEventListener('pointerup',up);document.addEventListener('pointercancel',up)});
+document.addEventListener('click',e=>{const z=e.target.closest('.slot,.bucket');if(!z||!selTile||e.target.closest('.tile'))return;if(z.dataset.group===selTile.dataset.group&&z._drop){const t=selTile;t.classList.remove('sel');selTile=null;z._drop(t)}});
+
+/* ============ I Can ============ */
+const ICAN=['I can name the dividend, divisor, quotient, and remainder.','I can divide up to a five-digit number by a two-digit number using the standard algorithm.','I can write a remainder as a fraction of the divisor.','I can estimate a quotient and check my answer with multiplication.','I can solve FAST-style division problems at every level'];
+ICAN.forEach((s,i)=>{const li=document.createElement('li');li.innerHTML=`<input type="checkbox" id="ic${i}" ${S.ican[i]?'checked':''}><label for="ic${i}">${s}</label>`;li.querySelector('input').onchange=e=>{S.ican[i]=e.target.checked;save()};$('#icanList').appendChild(li)});
+function checkIcan(i){S.ican[i]=true;save();const c=$('#ic'+i);if(c)c.checked=true}
+
+/* first-try tracker for training rooms */
+function firstTry(id,ok,el){if(S.tries[id])return;S.tries[id]=ok?'y':'n';save();if(ok)award(5,el)}
+
+/* ============ Room 1: vocab ============ */
+const VOC=[['100','dividend','Dividend','The dividend is the number being divided. It is the big number that goes inside the division house.'],['÷',null],['7','divisor','Divisor','The divisor is the number you divide by. It tells how many groups or how big each group is.'],['=',null],['14','quotient','Quotient','The quotient is the answer to a division problem.'],['R',null],['2','remainder','Remainder','The remainder is the amount left over. It must be smaller than the divisor.']];
+const vEq=$('#vocabEq'),vBank=$('#vocabBank');
+VOC.forEach(([sym,k,label,def])=>{const c=document.createElement('div');c.className='col';c.innerHTML=`<span>${sym}</span>`;if(k){const s=makeSlot('voc',t=>{if(s.classList.contains('ok'))return;if(t.dataset.val===k){s.className='slot ok';s.textContent=label;t.remove();tone(1);firstTry('voc_'+k,true,s);speak('Yes! '+def);if(!vBank.children.length)checkIcan(0)}else{tone(0);shake(s);firstTry('voc_'+k,false);speak(`Not quite. ${sym} is not the ${t.dataset.val}. Think about which job ${sym} has.`)}});
+ if(S.tries['voc_'+k]&&S.ans['voc_'+k]){s.className='slot ok';s.textContent=label}c.appendChild(s);s._k=k}vEq.appendChild(c)});
+shuffle(VOC.filter(v=>v[1])).forEach(([sym,k,label])=>{if(!S.ans['voc_'+k])vBank.appendChild(makeTile(k,'voc',label))});
+/* remember placement */
+vEq.addEventListener('click',()=>{});
+const _vocDrop=$$('#vocabEq .slot');_vocDrop.forEach(s=>{const orig=s._drop;s._drop=t=>{const k=s._k;const was=t.dataset.val===k;orig(t);if(was){S.ans['voc_'+k]=1;save()}}});
+
+/* ============ Room 2: long division coach ============ */
+const PROBS=[[1512,36],[7452,18],[9365,42],[38592,24],[56789,32]];
+function ldSteps(n,d){const s=String(n),L=s.length;let i=0,cur=+s[0];while(cur<d&&i<L-1){i++;cur=cur*10+ +s[i]}
+ const st=[];let r=0;while(true){const q=Math.floor(cur/d),p=q*d;r=cur-p;st.push({t:'q',idx:i,val:q,cur},{t:'p',idx:i,val:p,cur,q},{t:'r',idx:i,val:r,cur,p});if(i<L-1){i++;const nd=+s[i];st.push({t:'b',idx:i,val:nd,r});cur=r*10+nd}else break}
+ if(r>0)st.push({t:'f',val:`${r}/${d}`,r});return{st,q:Math.floor(n/d),r}}
+let pi=0,K=0,choices=null;const CS=S.coach;
+function stepSay(P,s){const d=P[1];switch(s.t){
+ case'q':return`<b>Divide.</b> How many ${d}s fit into ${fmt(s.cur)}? Look at the multiples of ${d}. Find the biggest one that is not more than ${fmt(s.cur)}. Drag that digit to the top.`;
+ case'p':return`<b>Multiply.</b> Multiply the digit you just wrote by the divisor. ${s.q} × ${d} = ? Drag the product under ${fmt(s.cur)}.`;
+ case'r':return`<b>Subtract.</b> ${fmt(s.cur)} − ${fmt(s.p)} = ? Your answer must be smaller than ${d}.`;
+ case'b':return`<b>Bring down.</b> Bring down the next digit of the dividend and write it next to ${s.r}. Which digit comes next?`;
+ case'f':return`<b>Remainder.</b> There are no more digits to bring down, so ${s.r} is the remainder. Write it as a fraction: the remainder goes on top and the divisor goes on the bottom.`}}
+function makeChoices(P,s){const d=P[1];let c=[];
+ if(s.t==='q')c=[s.val,s.val+1,s.val-1,s.val+2].filter(x=>x>=0&&x<=9);
+ if(s.t==='p')c=[s.val,(s.q+1)*d,s.q>0?(s.q-1)*d:s.val+d*2,s.val+10];
+ if(s.t==='r')c=[s.val,s.val+10,Math.abs(s.val-1),s.val+d];
+ if(s.t==='b'){c=[s.val,...String(P[0]).split('').map(Number)];c.push((s.val+3)%10)}
+ if(s.t==='f'){const[d2]=[d];c=[s.val,`${d2}/${s.r}`,`${s.r}/10`,`${s.r}/${d2+s.r}`]}
+ c=[...new Set(c.map(String))].slice(0,4);return shuffle(c)}
+function praise(P,s){const d=P[1];switch(s.t){case'q':return`Yes! ${s.val} × ${d} is the closest without going over.`;case'p':return`Correct! ${s.q} × ${d} = ${fmt(s.val)}.`;case'r':return`Nice! ${fmt(s.cur)} − ${fmt(s.p)} = ${s.val}.`;case'b':return`Great! You brought down the ${s.val}.`;case'f':return`Perfect!`}}
+function hintFor(P,s,v){const d=P[1];switch(s.t){
+ case'q':return +v*d>s.cur?`Too big. ${v} × ${d} = ${fmt(v*d)}, which is more than ${fmt(s.cur)}. Try a smaller digit.`:`Too small. You can fit one more ${d} into ${fmt(s.cur)}. Try a bigger digit.`;
+ case'p':return`Check your multiplying. What is ${s.q} × ${d}?`;
+ case'r':return`Subtract carefully: ${fmt(s.cur)} − ${fmt(s.p)}. Line up the place values.`;
+ case'b':return`Look at the dividend. Which digit is right after the ones you already used?`;
+ case'f':return`The remainder goes on top, and the divisor goes on the bottom.`}}
+function renderCoach(speakIt){const P=PROBS[pi],n=P[0],d=P[1],s=String(n),L=s.length,{st,q,r}=ldSteps(n,d);const ld=$('#ld');
+ ld.style.gridTemplateColumns=`auto repeat(${L},var(--cw)) auto`;ld.innerHTML='';
+ const add=(row,end,text,cls,el)=>{const len=String(text).length;const it=el||document.createElement('div');it.classList.add('it');if(cls)cls.split(' ').forEach(c=>it.classList.add(c));it.style.gridRow=row;it.style.gridColumn=`${end-len+3} / ${end+3}`;if(!el)it.innerHTML=String(text).split('').map(ch=>`<span class="ch">${ch}</span>`).join('');ld.appendChild(it);return it};
+ const dv=document.createElement('div');dv.className='divisor';dv.style.gridRow=2;dv.style.gridColumn=1;dv.textContent=d;ld.appendChild(dv);
+ s.split('').forEach((ch,i)=>{const c=document.createElement('div');c.className='ch dd'+(i===0?' first':'');c.style.gridRow=2;c.style.gridColumn=i+2;c.textContent=ch;ld.appendChild(c)});
+ let cyc=-1;const diff={};
+ for(let j=0;j<=Math.min(K,st.length-1);j++){const x=st[j],pending=j===K;if(x.t==='q')cyc++;
+  const pr=3+2*cyc,dr=4+2*cyc;
+  if(pending){const sl=makeSlot('coach',t=>coachDrop(t,sl));const len=String(x.val).length;sl.style.width=`calc(${len}*var(--cw))`;
+   if(x.t==='q')add(1,x.idx,'?','',sl);
+   if(x.t==='p'){add(pr,x.idx,String(x.val),'',sl);const m=document.createElement('div');m.className='minus';m.style.gridRow=pr;m.style.gridColumn=`1 / ${x.idx-len+3}`;m.textContent='−';ld.appendChild(m)}
+   if(x.t==='r')add(dr,x.idx,String(x.val),'',sl);
+   if(x.t==='b'){add(dr,x.idx-1,diff[cyc].text,'');add(dr,x.idx,'?','',sl)}
+   if(x.t==='f'){sl.style.width='auto';sl.style.gridRow=1;sl.style.gridColumn=`${L+2} / ${L+3}`;sl.classList.add('it');ld.appendChild(sl)}
+   sl.classList.add('hot');continue}
+  if(x.t==='q')add(1,x.idx,String(x.val),'quo');
+  if(x.t==='p'){const len=String(x.val).length;add(pr,x.idx,String(x.val),'ul');const m=document.createElement('div');m.className='minus';m.style.gridRow=pr;m.style.gridColumn=`1 / ${x.idx-len+3}`;m.textContent='−';ld.appendChild(m)}
+  if(x.t==='r'){diff[cyc]={text:String(x.val),end:x.idx}}
+  if(x.t==='b'){diff[cyc]={text:String(x.r*10+x.val),end:x.idx}}
+ }
+ Object.entries(diff).forEach(([c,v])=>{const pendingB=K<st.length&&st[K].t==='b'&&+c===cyc;if(!pendingB)add(4+2*c,v.end,v.text,'')});
+ const done=K>=st.length;
+ if(done&&r>0){const rem=document.createElement('div');rem.className='remd';rem.style.gridRow=1;rem.style.gridColumn=`${L+2} / ${L+3}`;rem.innerHTML=`R ${r} = ${fracHTML(r+'/'+d)}`;ld.appendChild(rem)}
+ /* side panel */
+ $$('#dmsb span').forEach(sp=>sp.classList.toggle('now',!done&&st[K]&&sp.dataset.s===st[K].t));
+ $('#multD').textContent=d;$('#mults').innerHTML=Array.from({length:9},(_,i)=>`<span>${d} × ${i+1} = ${fmt(d*(i+1))}</span>`).join('');
+ const bank=$('#coachBank');bank.innerHTML='';
+ if(done){const ans=r>0?`${fmt(q)} R ${r}, or ${fmt(q)} ${r}/${d}`:fmt(q);$('#coachSay').innerHTML=`<b>You did it!</b> ${fmt(n)} ÷ ${d} = ${fracHTML(ans)}. Check it: ${fmt(q)} × ${d}${r?` + ${r}`:''} = ${fmt(n)}. ${PROBS.every((_,i)=>CS['p'+i]||i===pi)?'You finished every coach problem!':'Pick the next problem.'}`;
+  if(!CS['p'+pi]){CS['p'+pi]=1;save();award(20,$('#coachSay'));burst();tone(1)}if(PROBS.every((_,i)=>CS['p'+i]))checkIcan(1);renderPick()}
+ else{const x=st[K];$('#coachSay').innerHTML=stepSay(P,x);if(!choices)choices=makeChoices(P,x);choices.forEach(v=>bank.appendChild(makeTile(v,'coach')))}
+ if(speakIt)speak($('#coachSay').innerText)}
+function coachDrop(t,sl){const P=PROBS[pi],{st}=ldSteps(P[0],P[1]),x=st[K];const ok=t.dataset.val===String(x.val);
+ const id=`coach_${pi}_${K}`;
+ if(ok){tone(1);firstTry(id,true,sl);const msg=praise(P,x);K++;choices=null;CS['k'+pi]=K;save();renderCoach(false);
+  speak(msg+' '+(K<st.length?$('#coachSay').innerText:$('#coachSay').innerText))}
+ else{tone(0);firstTry(id,false);shake(sl);const h=hintFor(P,x,t.dataset.val);$('#coachSay').innerHTML=stepSay(P,x)+`<br><span style="color:#ffb4c9">${h}</span>`;speak(h)}}
+function renderPick(){$('#probPick').innerHTML='';PROBS.forEach((P,i)=>{const b=document.createElement('button');b.textContent=`${fmt(P[0])} ÷ ${P[1]}`;b.setAttribute('aria-pressed',i===pi);if(CS['p'+i])b.classList.add('done');b.onclick=()=>{pi=i;K=CS['p'+i]?0:(CS['k'+i]||0);choices=null;renderPick();renderCoach(true)};$('#probPick').appendChild(b)})}
+$('#coachRepeat').onclick=()=>speak($('#coachSay').innerText,true);
+$('#coachReset').onclick=()=>{K=0;CS['k'+pi]=0;save();choices=null;renderCoach(true)};
+K=CS['p0']?0:(CS['k0']||0);renderPick();renderCoach(false);
+
+/* ============ Room 3: remainders as fractions ============ */
+function matchRoom(host,bankEl,group,pairs,extra,ican,okMsg,noMsg){const done=store.get(group,{});
+ pairs.forEach(([lhs,key,info])=>{const p=document.createElement('div');p.className='pair';p.style.flexWrap='wrap';p.innerHTML=`<span>${lhs} =</span>`;
+  const sl=makeSlot(group,t=>{if(sl.classList.contains('ok'))return;if(t.dataset.val===key){tone(1);firstTry(group+'_'+key,true,sl);sl.className='slot ok';sl.innerHTML=fracHTML(key);t.remove();done[key]=1;store.set(group,done);speak(okMsg(lhs,key,info));if(pairs.every(x=>done[x[1]]))checkIcan(ican)}
+   else{tone(0);firstTry(group+'_'+key,false);shake(sl);speak(noMsg(lhs,key,info))}});
+  if(done[key]){sl.className='slot ok';sl.innerHTML=fracHTML(key)}p.appendChild(sl);host.appendChild(p)});
+ shuffle(pairs.map(x=>x[1]).concat(extra)).forEach(v=>{if(!done[v])bankEl.appendChild(makeTile(v,group))})}
+matchRoom($('#rf'),$('#rfBank'),'rf',[['100 ÷ 7','14 2/7',['14','2','7']],['50 ÷ 8','6 2/8',['6','2','8']],['1,000 ÷ 24','41 16/24',['41','16','24']],['9,365 ÷ 42','222 41/42',['222','41','42']]],['14 2/14','6 8/2'],2,
+ (l,k,i)=>`Yes! ${l} = ${i[0]} R ${i[1]}. The remainder ${i[1]} goes on top and the divisor ${i[2]} goes on the bottom.`,
+ (l,k,i)=>`Not quite. First divide to find the quotient and remainder. Then put the remainder over the divisor, ${i[2]}.`);
+
+/* ============ Room 4: estimate ============ */
+matchRoom($('#est'),$('#estBank'),'est',[['6,318 ÷ 79 ≈','80',['6,400','80']],['2,436 ÷ 41 ≈','60',['2,400','40']],['35,870 ÷ 58 ≈','600',['36,000','60']],['2,091 ÷ 31 ≈','70',['2,100','30']]],['8','6,000'],3,
+ (l,k,i)=>`Yes! Round to ${i[0]} divided by ${i[1]}, which is ${k}.`,
+ (l,k,i)=>`Not quite. Round the divisor to ${i[1]}. Then find a nearby dividend that ${i[1]} divides into easily, like ${i[0]}.`);
+
+/* ============ Worlds ============ */
+const WORLDS=[
+ {k:'w1',name:'World 1: Number Caves',sub:'Level 1 · Recall and compute',color:'var(--teal)',qs:[
+  {t:'drag',q:'Solve: 2,688 ÷ 12 = ____',tiles:['224','214','234','2,240'],a:'224',tip:'Start with 26 ÷ 12. Then multiply, subtract, and bring down. Use the multiples of 12: 12, 24, 36, 48.',why:'12 × 224 = 2,688, so the quotient is 224.'},
+  {t:'mc',q:'In the problem 864 ÷ 24 = 36, which number is the divisor?',o:['864','24','36','There is no divisor'],a:1,tip:'The divisor is the number you divide BY.',why:'You are dividing 864 by 24, so 24 is the divisor. 864 is the dividend and 36 is the quotient.'},
+  {t:'drag',q:'Solve: 8,050 ÷ 35 = ____',tiles:['23','230','203','2,300'],a:'230',tip:'After you finish dividing, check whether you need a zero in the ones place.',why:'35 × 230 = 8,050. The zero holds the ones place.'},
+  {t:'drag',q:'Solve: 38,592 ÷ 24 = ____',tiles:['1,608','168','1,680','1,618'],a:'1,608',tip:'Watch for a step where 24 does not fit. That digit in the quotient is 0.',why:'38 ÷ 24 = 1, 145 ÷ 24 = 6, 19 ÷ 24 = 0, and 192 ÷ 24 = 8. The quotient is 1,608, and 24 × 1,608 = 38,592.'},
+  {t:'mc',q:'Solve: 5,016 ÷ 22',o:['218','228','238','2,028'],a:1,tip:'Estimate first: 22 is close to 20, and 5,000 ÷ 20 = 250. Your answer should be close to 250.',why:'22 × 228 = 5,016.'}]},
+ {k:'w2',name:'World 2: Lava Bridges',sub:'Level 2 · Estimate, check, and explain',color:'var(--orange)',qs:[
+  {t:'mc',q:'Which shows 1,000 ÷ 24 with the remainder written as a fraction?',o:['41 24/16','41 16/24','42 16/24','41 16/1000'],a:1,tip:'Divide to find the quotient and remainder. Then put the remainder over the divisor.',why:'1,000 ÷ 24 = 41 R 16. The remainder 16 goes over the divisor 24, so the answer is 41 16/24.'},
+  {t:'mc',q:'Which is the BEST estimate for 6,318 ÷ 79?',o:['8','80','800','8,000'],a:1,tip:'Round to friendly numbers: 79 is close to 80, and 6,318 is close to 6,400.',why:'6,400 ÷ 80 = 80, so 80 is the best estimate.'},
+  {t:'order',q:'Put the first four moves for 2,592 ÷ 32 in order.',steps:['Divide: 259 ÷ 32 is about 8','Multiply: 8 × 32 = 256','Subtract: 259 − 256 = 3','Bring down the 2 to make 32'],tip:'Remember: Divide, Multiply, Subtract, Bring down.',why:'Divide, Multiply, Subtract, Bring down. Then 32 ÷ 32 = 1, so 2,592 ÷ 32 = 81.'},
+  {t:'drag',q:'Juan found that 47,250 ÷ 63 = 750. Complete the multiplication that checks his answer: ____ × 63 = 47,250',tiles:['750','75','7,500','705'],a:'750',tip:'To check division, multiply the quotient by the divisor.',why:'750 × 63 = 47,250, so Juan\'s quotient is correct.'},
+  {t:'drag',q:'Solve: 56,789 ÷ 32 = ____',tiles:['1,774 R 21','1,773 R 53','177 R 21','1,774 R 32'],a:'1,774 R 21',tip:'The remainder must always be smaller than the divisor. Cross out any choice that breaks that rule.',why:'32 × 1,774 = 56,768, and 56,789 − 56,768 = 21. A remainder of 32 or 53 is too big, because it must be less than 32.'}]},
+ {k:'w3',name:'World 3: Sky Castle',sub:'Level 3 · Think and prove',color:'var(--pink)',qs:[
+  {t:'mc',q:'Leo solved 3,605 ÷ 35 and got 13. What mistake did he make?',o:['He forgot to write a 0 in the quotient when 35 did not fit into 10. The answer is 103.','He should have multiplied instead. The answer is 126,175.','He subtracted wrong. The answer is 130.','He made no mistake. The answer is 13.'],a:0,tip:'Check his answer by multiplying 13 × 35. Is it 3,605?',why:'13 × 35 = 455, which is far too small. After 36 − 35 = 1, he brought down 0 to get 10. 35 does not fit into 10, so a 0 goes in the quotient. 35 × 103 = 3,605.'},
+  {t:'mc',q:'Without dividing all the way, how many digits will the quotient of 25,488 ÷ 36 have?',o:['2 digits','3 digits','4 digits','5 digits'],a:1,tip:'Find the first part of the dividend that 36 fits into. Where does the first quotient digit go?',why:'36 does not fit into 2 or 25, so the first digit goes above the 4 in 254, which is the hundreds place. 25,488 ÷ 36 = 708, a 3-digit quotient.'},
+  {t:'mc',q:'Compare the quotients of 2,340 ÷ 45 and 1,872 ÷ 36. Which statement is true?',o:['2,340 ÷ 45 has the greater quotient.','1,872 ÷ 36 has the greater quotient.','The quotients are equal.','You cannot compare them without a calculator.'],a:2,tip:'Solve both problems. Then compare.',why:'2,340 ÷ 45 = 52 and 1,872 ÷ 36 = 52, so the quotients are equal.'},
+  {t:'drag',q:'A division problem has a quotient of 46, a remainder of 5, and a divisor of 12. What is the dividend? ____',tiles:['557','552','547','63'],a:'557',tip:'Work backward: quotient × divisor + remainder = dividend.',why:'46 × 12 = 552, and 552 + 5 = 557.'},
+  {t:'mc',q:'Ava says, "When you divide the same number by a bigger divisor, the quotient gets bigger." Which example proves Ava is WRONG?',o:['720 ÷ 24 = 30, so Ava is correct.','720 ÷ 12 = 60 and 720 ÷ 24 = 30, so the quotient got smaller.','720 ÷ 12 = 60 and 720 ÷ 24 = 60, so the quotient stayed the same.','12 ÷ 720 is greater than 720 ÷ 12.'],a:1,tip:'Try dividing the same dividend by two different divisors and compare.',why:'Using a bigger divisor makes each group bigger, so there are fewer groups. 720 ÷ 24 = 30 is smaller than 720 ÷ 12 = 60.'}]}];
+function wDone(w){return w.qs.every((_,i)=>S.ans[w.k+'_'+i]!=null)}
+function wScore(w){return w.qs.reduce((a,q,i)=>a+(S.ans[w.k+'_'+i]==='y'?1:0),0)}
+function starsFor(w){if(!wDone(w))return 0;const s=wScore(w);return s===5?3:s>=4?2:s>=3?1:0}
+function ansSay(q){if(q.t==='mc')return q.q+' '+q.o.map((o,k)=>String.fromCharCode(65+k)+'. '+o).join('. ');if(q.t==='drag')return q.q+' Choices: '+q.tiles.join(', ');return q.q}
+function buildQ(w,qi,host){const q=w.qs[qi],id=w.k+'_'+qi,d=document.createElement('div');d.className='q';
+ d.innerHTML=`<div class="sec-head"><h3 style="font-family:var(--body);font-weight:700;font-size:1.1rem">${qi+1}. ${q.q.replace('____','<span class="blank"></span>')}</h3><div class="row"><button class="btn listen sm">Listen</button><button class="btn tip sm">Strategy Tip</button></div></div><div class="body"></div><p class="tipbox" hidden>${q.tip}</p><p class="why" hidden></p>`;
+ d.querySelector('.listen').onclick=()=>speak(ansSay(q),true);
+ d.querySelector('.tip').onclick=()=>{const tb=d.querySelector('.tipbox');tb.hidden=false;speak('Strategy tip. '+q.tip,true)};
+ const body=d.querySelector('.body'),why=d.querySelector('.why');
+ function finish(ok,fresh){S.ans[id]=ok?'y':'n';save();why.hidden=false;why.innerHTML=`<b style="color:var(--${ok?'green':'red'})">${ok?'Correct! +10 coins.':'Not quite.'}</b> ${q.why}`;if(fresh){tone(ok);if(ok)award(10,d);speak((ok?'Correct! ':'Not quite. ')+q.why);worldCheck(w)}}
+ if(q.t==='mc'){const op=document.createElement('div');op.className='opts';q.o.forEach((o,k)=>{const b=document.createElement('button');b.className='opt';b.innerHTML=String.fromCharCode(65+k)+'. '+fracHTML(o);b.onclick=()=>{if(S.ans[id]!=null)return;S.pick=S.pick||{};S.pick[id]=k;lockMC(true)};op.appendChild(b)});body.appendChild(op);
+  function lockMC(fresh){if(S.ans[id]==null&&!fresh)return;const pk=(S.pick||{})[id];[...op.children].forEach((b,k)=>{b.disabled=true;if(k===q.a)b.classList.add('right');else if(k===pk)b.classList.add('wrong')});if(fresh)finish(pk===q.a,true);else finish(S.ans[id]==='y',false)}
+  if(S.ans[id]!=null)lockMC(false)}
+ if(q.t==='drag'){const grp='g_'+id;const sl=makeSlot(grp,t=>{if(S.ans[id]!=null)return;S.pick=S.pick||{};S.pick[id]=t.dataset.val;lockDrag(true)});
+  const blank=d.querySelector('.blank');blank.replaceWith(sl);const bank=document.createElement('div');bank.className='bank';shuffle(q.tiles).forEach(v=>bank.appendChild(makeTile(v,grp)));body.appendChild(bank);
+  function lockDrag(fresh){const pk=(S.pick||{})[id];const ok=pk===q.a;sl.className='slot '+(ok?'ok':'no');sl.innerHTML=fracHTML(pk)+(ok?'':` <span style="color:var(--green);margin-left:8px">→ ${fracHTML(q.a)}</span>`);bank.querySelectorAll('.tile').forEach(t=>{t.dataset.locked=1;t.disabled=true;if(t.dataset.val===pk)t.remove()});if(fresh)finish(ok,true);else finish(S.ans[id]==='y',false)}
+  if(S.ans[id]!=null)lockDrag(false)}
+ if(q.t==='order'){const grp='g_'+id,ord=document.createElement('div');ord.className='order';const slots=[];const bank=document.createElement('div');bank.className='bank';
+  q.steps.forEach((_,i)=>{const ln=document.createElement('div');ln.className='line';ln.innerHTML=`<span class="n">${i+1}</span>`;const sl=makeSlot(grp,t=>{if(S.ans[id]!=null)return;if(sl._t)bank.appendChild(sl._t);sl.innerHTML='';sl.appendChild(t);sl._t=t;t.classList.remove('sel');chk.disabled=!slots.every(s=>s._t)});slots.push(sl);ln.appendChild(sl);ord.appendChild(ln)});
+  shuffle(q.steps).forEach(s=>bank.appendChild(makeTile(s,grp,s,'txt')));
+  bank.dataset.group=grp;bank.classList.add('slot');bank.style.cssText='border-color:var(--muted);background:#fff;color:var(--ink);justify-content:flex-start;width:100%';bank._drop=t=>{if(S.ans[id]!=null)return;const from=slots.find(s=>s._t===t);if(from){from._t=null;from.innerHTML='&nbsp;?&nbsp;'}bank.appendChild(t);chk.disabled=true};
+  const chk=document.createElement('button');chk.className='btn go';chk.textContent='Check my order';chk.disabled=true;
+  chk.onclick=()=>{if(S.ans[id]!=null)return;const ok=slots.every((s,i)=>s._t.dataset.val===q.steps[i]);lockOrder(true,ok)};
+  function lockOrder(fresh,ok){slots.forEach((s,i)=>{s.innerHTML='';const t=makeTile(q.steps[i],grp,q.steps[i],'txt');t.dataset.locked=1;s.appendChild(t);s.classList.add('ok')});bank.remove();chk.remove();if(fresh)finish(ok,true);else finish(S.ans[id]==='y',false)}
+  body.append(ord,bank,chk);if(S.ans[id]!=null)lockOrder(false)}
+ host.appendChild(d)}
+const wt=$('#worldTabs'),wp=$('#worldPanels');
+WORLDS.forEach((w,wi)=>{const b=document.createElement('button');b.setAttribute('role','tab');b.id='tab_'+w.k;wt.appendChild(b);
+ const p=document.createElement('div');p.id='panel_'+w.k;p.setAttribute('role','tabpanel');p.style.cssText='display:flex;flex-direction:column;gap:14px';
+ p.innerHTML=`<h3 style="color:${w.color};font-size:1.6rem">${w.name}</h3><div class="qs" style="display:flex;flex-direction:column;gap:14px"></div><div class="res" aria-live="polite"></div>`;
+ w.qs.forEach((_,qi)=>buildQ(w,qi,p.querySelector('.qs')));wp.appendChild(p);b.onclick=()=>showWorld(w.k)});
+function unlocked(wi){return wi===0||wDone(WORLDS[wi-1])}
+function tabsRender(){WORLDS.forEach((w,wi)=>{const b=$('#tab_'+w.k);const st=starsFor(w);b.disabled=!unlocked(wi);b.innerHTML=`${unlocked(wi)?'':'🔒 '}${w.name.split(':')[0]}<small>${w.sub}${wDone(w)?' · '+'★'.repeat(st)+'☆'.repeat(3-st):''}</small>`;
+ const res=$('#panel_'+w.k+' .res');if(wDone(w)){const s=wScore(w);res.innerHTML=`<div class="worldscore"><div class="bigstars" aria-label="${st} stars">${'★'.repeat(st)}${'☆'.repeat(3-st)}</div><div><b style="font-size:1.2rem">World cleared! ${s} out of 5</b><p>${wi<2?'The next world is unlocked.':'You beat every world!'} ${s<5?'Read the explanations for any you missed.':''}</p></div></div>`}});hud()}
+function showWorld(k){WORLDS.forEach(w=>{$('#tab_'+w.k).setAttribute('aria-selected',w.k===k);$('#panel_'+w.k).hidden=w.k!==k});store.set('world',k)}
+function worldCheck(w){tabsRender();if(wDone(w)&&!S['cel_'+w.k]){S['cel_'+w.k]=1;save();burst();const st=starsFor(w);setTimeout(()=>speak(`World cleared! You scored ${wScore(w)} out of 5 and earned ${st} ${st===1?'star':'stars'}.`),2500)}
+ if(WORLDS.every(wDone)){checkIcan(4);trophy(true)}}
+function trophy(fresh){if(!WORLDS.every(wDone))return;const tot=WORLDS.reduce((a,w)=>a+wScore(w),0);$('#trophy').innerHTML=`<div class="worldscore" style="background:var(--pink);color:#fff"><svg width="70" height="70" viewBox="0 0 64 64" aria-hidden="true"><path d="M18 8h28v14a14 14 0 0 1-28 0z" fill="#ffd23f" stroke="#22184d" stroke-width="3"/><path d="M18 12H8a10 10 0 0 0 10 12M46 12h10a10 10 0 0 1-10 12" fill="none" stroke="#22184d" stroke-width="3"/><rect x="28" y="36" width="8" height="10" fill="#ffd23f" stroke="#22184d" stroke-width="3"/><rect x="18" y="46" width="28" height="8" rx="2" fill="#ffd23f" stroke="#22184d" stroke-width="3"/></svg><div><b style="font-family:var(--display);font-size:1.7rem">Quotient Champion!</b><p>You scored ${tot} out of 15 across all three worlds and collected ${S.coins} coins.</p></div></div>`;if(fresh&&!S.champ){S.champ=1;save();setTimeout(()=>speak(`You are a Quotient Champion! You scored ${tot} out of 15.`),5200)}}
+tabsRender();showWorld(store.get('world','w1'));if(!unlocked(WORLDS.findIndex(w=>w.k===store.get('world','w1'))))showWorld('w1');trophy(false);
+
+/* ============ Calculator ============ */
+const calc=$('#calc'),cb=$('#calcBtn');let expr='';
+const KEYS=[['7'],['8'],['9'],['÷','op'],['4'],['5'],['6'],['×','op'],['1'],['2'],['3'],['−','op'],['0'],['C'],['⌫'],['+','op'],['R','rk','Divide with remainder'],['=','eqk']];
+KEYS.forEach(([k,c,label])=>{const b=document.createElement('button');b.textContent=k==='R'?'÷ with R':k;if(c)b.className=c;if(k==='='){b.style.gridColumn='span 2'}b.setAttribute('aria-label',label||k);b.onclick=()=>key(k);$('#keys').appendChild(b)});
+function show(out){$('#cExpr').textContent=expr||' ';$('#cOut').textContent=out}
+function evaluate(e){const js=e.replace(/÷/g,'/').replace(/×/g,'*').replace(/−/g,'-').replace(/,/g,'');if(!/^[\d+\-*/. ]+$/.test(js))return null;try{const v=Function('"use strict";return ('+js+')')();return isFinite(v)?v:null}catch(err){return null}}
+function key(k){if(k==='C'){expr='';show('0');return}if(k==='⌫'){expr=expr.slice(0,-1);show(expr||'0');return}
+ if(k==='='){const v=evaluate(expr);show(v==null?'Error':fmt(Math.round(v*1e6)/1e6));return}
+ if(k==='R'){const m=expr.match(/^(\d+)\s*÷\s*(\d+)$/);if(!m||+m[2]===0){show('Type a ÷ b first');return}const a=+m[1],b=+m[2];const out=`${fmt(Math.floor(a/b))} R ${a%b}`;show(out);speak(`${fmt(a)} divided by ${b} equals ${out}`);return}
+ expr+=k;show(expr)}
+cb.onclick=()=>{calc.hidden=!calc.hidden;cb.setAttribute('aria-pressed',!calc.hidden)};$('#calcClose').onclick=()=>{calc.hidden=true;cb.setAttribute('aria-pressed',false)};
+document.addEventListener('keydown',e=>{if(calc.hidden||e.target.matches('input,textarea'))return;const m={'/':'÷','*':'×','-':'−','+':'+','Enter':'=','Backspace':'⌫','Escape':'C'};const k=/^\d$/.test(e.key)?e.key:m[e.key];if(k){e.preventDefault();key(k)}});
+
+hud();
+})();
+</script>
+
+</body></html>
